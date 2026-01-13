@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking Geral - Mentoria Odisseia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Ranking Geral (All-Time)</h1>
+
+    <div class="container" style="flex-direction: column; align-items: center; gap: 30px;">
+        <section id="card-ranking-geral" class="ranking-section" style="width: 100%; max-width: 800px;">
+            <h2>Ranking Geral (09/10/25 - Hoje)</h2>
+            
+            <h3>🏆 Top 3 - Quantidade</h3>
+            <div class="ranking-podium" id="podium-quantidade-geral">
+                <div class="podium-spot spot-2">
+                    <div class="podium-rank">#2</div>
+                    <div class="podium-name" id="podium-qtd-geral-2-name">---</div>
+                    <div class="podium-score" id="podium-qtd-geral-2-score">--- Questões</div>
+                </div>
+                <div class="podium-spot spot-1">
+                    <div class="podium-rank">#1 🥇</div>
+                    <div class="podium-name" id="podium-qtd-geral-1-name">---</div>
+                    <div class="podium-score" id="podium-qtd-geral-1-score">--- Questões</div>
+                </div>
+                <div class="podium-spot spot-3">
+                    <div class="podium-rank">#3</div>
+                    <div class="podium-name" id="podium-qtd-geral-3-name">---</div>
+                    <div class="podium-score" id="podium-qtd-geral-3-score">--- Questões</div>
+                </div>
+            </div>
+            <h4>Demais Colocações (Quantidade):</h4>
+            <ol id="ranking-quantidade-geral-lista"></ol>
+
+            <h3 style="margin-top: 40px;">📊 Top 3 - % de Acerto</h3>
+            <div class="ranking-podium" id="podium-percentual-geral">
+                <div class="podium-spot spot-2">
+                    <div class="podium-rank">#2</div>
+                    <div class="podium-name" id="podium-perc-geral-2-name">---</div>
+                    <div class="podium-score" id="podium-perc-geral-2-score">--- %</div>
+                </div>
+                <div class="podium-spot spot-1">
+                    <div class="podium-rank">#1 🥇</div>
+                    <div class="podium-name" id="podium-perc-geral-1-name">---</div>
+                    <div class="podium-score" id="podium-perc-geral-1-score">--- %</div>
+                </div>
+                <div class="podium-spot spot-3">
+                    <div class="podium-rank">#3</div>
+                    <div class="podium-name" id="podium-perc-geral-3-name">---</div>
+                    <div class="podium-score" id="podium-perc-geral-3-score">--- %</div>
+                </div>
+            </div>
+            <h4>Demais Colocações (% Acerto):</h4>
+            <ol id="ranking-percentual-geral-lista"></ol>
+        </section>
+    </div>
+
+    <a href="/historico-questoes" style="margin-top: 20px; font-weight: bold;">Voltar ao Histórico</a>
+    <script src="{{ url_for('static', filename='ranking_geral.js') }}"></script>
+</body>
+</html>

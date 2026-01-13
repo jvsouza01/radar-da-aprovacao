@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Simulados - Mentoria Odisseia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Gerenciamento de Simulados</h1>
+
+    <div class="container">
+        <div class="form-section" style="flex: 2; display: flex; flex-direction: column; gap: 30px;">
+            
+            <div class="form-section">
+                <h2>Lançar Nota de Aluno</h2>
+                <form id="form-add-resultado">
+                    <label for="resultado-aluno">Aluno:</label>
+                    <select id="resultado-aluno" required>
+                        <option value="">Carregando alunos...</option>
+                    </select>
+
+                    <label for="resultado-simulado">Simulado:</label>
+                    <select id="resultado-simulado" required>
+                        <option value="">Carregando simulados...</option>
+                    </select>
+
+                    <label for="resultado-nota">Nota:</label>
+                    <input type="number" step="0.01" id="resultado-nota" placeholder="Ex: 75.25" required>
+
+                    <button type="submit">Lançar Nota</button>
+                </form>
+            </div>
+
+            <div class="form-section">
+                <h2>Cadastrar Novo Simulado</h2>
+                <form id="form-add-simulado">
+                    <label for="simulado-empresa">Empresa:</label>
+                    <select id="simulado-empresa" required>
+                        <option value="">Carregando empresas...</option>
+                    </select>
+                    <label for="simulado-numero">Número do Simulado (opcional):</label>
+                    <input type="number" id="simulado-numero" placeholder="Ex: 5">
+                    <label for="simulado-nome">Nome Específico (opcional):</label>
+                    <input type="text" id="simulado-nome" placeholder="Ex: Simulado de Véspera">
+                    <label for="simulado-categoria">Categoria:</label>
+                    <select id="simulado-categoria" required>
+                        <option value="">Selecione...</option>
+                        <option value="Soldado">SD-PMBA</option>
+                        <option value="Oficial">CFO-PMBA</option>
+                        <option value="PCBA">PCBA</option>
+                    </select>
+                    <label for="simulado-data">Data de Realização:</label>
+                    <input type="date" id="simulado-data" required>
+                    <button type="submit">Salvar Simulado</button>
+                </form>
+            </div>
+
+            <div class="form-section">
+                <h2>Cadastrar Nova Empresa</h2>
+                <form id="form-add-empresa">
+                    <label for="empresa-nome">Nome da Empresa:</label>
+                    <input type="text" id="empresa-nome" placeholder="Ex: Projeto Caveira" required>
+                    <button type="submit">Salvar Empresa</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="info-column" style="flex: 3;">
+            <div class="recent-section">
+                <h3>Últimas Notas Lançadas</h3>
+                <ul id="lista-ultimas-notas"></ul>
+            </div>
+            
+            <div class="recent-section">
+                <h3>Empresas Cadastradas</h3>
+                <ul id="lista-empresas"></ul>
+            </div>
+            <div class="recent-section">
+                <h3>Simulados Cadastrados</h3>
+                <ul id="lista-simulados"></ul>
+            </div>
+        </div>
+    </div>
+
+    <a href="/" style="margin-top: 20px; font-weight: bold;">Voltar para a Página Principal</a>
+    <script src="{{ url_for('static', filename='gerenciamento_simulados.js') }}"></script>
+</body>
+</html>

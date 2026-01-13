@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentoria Odisseia - Rankings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Mentoria Odisseia</h1>
+
+    <nav class="main-nav">
+        <a href="/registrar-questoes" class="nav-button">Registrar Questões</a>
+        <a href="/historico-questoes" class="nav-button">Histórico (Questões)</a>
+        <a href="/ranking-simulados" class="nav-button">Rankings de Simulados</a>
+        <a href="/consulta-desempenho" class="nav-button">Consulta Individual</a>
+        <a href="/gerenciar-simulados" class="nav-button">Registrar Simulados</a>
+        
+        <a href="/batalha-times" class="nav-button btn-highlight">Batalha de Pelotão</a>
+        
+        <a href="/gerenciar-times" class="nav-button btn-admin">Times (Admin)</a>
+        <a href="/gerenciar-alunos" class="nav-button btn-admin">Alunos (Admin)</a>
+    </nav>
+
+    <div class="container" style="flex-direction: column; align-items: center; width: 100%; max-width: 1400px;">
+         <section class="ranking-section" style="width: 100%;">
+            <h2>Ranking da Semana</h2>
+
+            <h3>🏆 Top 3 - Quantidade (Semana)</h3>
+            <div class="ranking-podium" id="podium-quantidade">
+                <div class="podium-spot spot-2">
+                    <div class="podium-rank">#2</div>
+                    <div class="podium-name" id="podium-qtd-2-name">---</div>
+                    <div class="podium-score" id="podium-qtd-2-score">--- Questões</div>
+                </div>
+                <div class="podium-spot spot-1">
+                    <div class="podium-rank">#1 🥇</div>
+                    <div class="podium-name" id="podium-qtd-1-name">---</div>
+                    <div class="podium-score" id="podium-qtd-1-score">--- Questões</div>
+                </div>
+                <div class="podium-spot spot-3">
+                    <div class="podium-rank">#3</div>
+                    <div class="podium-name" id="podium-qtd-3-name">---</div>
+                    <div class="podium-score" id="podium-qtd-3-score">--- Questões</div>
+                </div>
+            </div>
+            <h4>Demais Colocações (Quantidade):</h4>
+            <ol id="ranking-quantidade"></ol> 
+            
+            <h3 style="margin-top: 40px;">📊 Top 3 - % de Acerto (Semana)</h3>
+             <div class="ranking-podium" id="podium-percentual">
+                <div class="podium-spot spot-2">
+                    <div class="podium-rank">#2</div>
+                    <div class="podium-name" id="podium-perc-2-name">---</div>
+                    <div class="podium-score" id="podium-perc-2-score">--- %</div>
+                </div>
+                <div class="podium-spot spot-1">
+                    <div class="podium-rank">#1 🥇</div>
+                    <div class="podium-name" id="podium-perc-1-name">---</div>
+                    <div class="podium-score" id="podium-perc-1-score">--- %</div>
+                </div>
+                <div class="podium-spot spot-3">
+                    <div class="podium-rank">#3</div>
+                    <div class="podium-name" id="podium-perc-3-name">---</div>
+                    <div class="podium-score" id="podium-perc-3-score">--- %</div>
+                </div>
+            </div>
+            <h4>Demais Colocações (% Acerto):</h4>
+            <ol id="ranking-percentual"></ol> 
+        </section>
+    </div> 
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

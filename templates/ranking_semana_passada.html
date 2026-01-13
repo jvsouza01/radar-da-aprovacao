@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking Semana Passada - Mentoria Odisseia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Ranking da Semana Passada</h1>
+    
+    <h3 id="periodo-texto" style="text-align: center; color: #aaa; margin-top: -15px; margin-bottom: 30px; border: none;">
+        Carregando datas...
+    </h3>
+
+    <div class="container" style="flex-direction: column; align-items: center; gap: 30px;">
+        <section id="card-semana-passada" class="ranking-section" style="width: 100%; max-width: 1000px;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                 <h2>Resumo Semanal</h2>
+                 <button id="btn-pdf-semana-passada" class="action-button">Baixar PDF</button>
+            </div>
+
+            <div style="margin-bottom: 30px; background-color: var(--input-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px;">
+                <h3 style="text-align: center; margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid #444;">
+                    ⚔️ Batalha de Pelotões
+                </h3>
+                <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 15px; text-align: center;">
+                    <div class="text-alpha" style="color: #3b82f6;">
+                        <h4 style="margin:0; font-size: 1.2em;">PELOTÃO ALPHA</h4>
+                        <div id="bat-alpha-qtd" style="font-size: 2em; font-weight: bold;">---</div>
+                        <div style="font-size: 0.9em; opacity: 0.8;">Questões</div>
+                        <div id="bat-alpha-perc" style="font-size: 1em; font-weight: bold; margin-top: 5px;">---%</div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="font-size: 1.5em; font-weight: bold; color: #555;">VS</span>
+                        <div style="margin-top: 10px; background: #333; padding: 5px 15px; border-radius: 5px; border: 1px solid var(--primary-green);">
+                            <span style="font-size: 0.8em; color: #aaa;">VENCEDOR</span><br>
+                            <span id="bat-vencedor" style="font-weight: bold; color: var(--primary-green);">---</span>
+                        </div>
+                    </div>
+
+                    <div class="text-omega" style="color: #ef4444;">
+                        <h4 style="margin:0; font-size: 1.2em;">PELOTÃO OMEGA</h4>
+                        <div id="bat-omega-qtd" style="font-size: 2em; font-weight: bold;">---</div>
+                        <div style="font-size: 0.9em; opacity: 0.8;">Questões</div>
+                        <div id="bat-omega-perc" style="font-size: 1em; font-weight: bold; margin-top: 5px;">---%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ranking-columns-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+                <div class="ranking-column" style="flex: 1; min-width: 350px;">
+                    <h3>🏆 Top 3 - Quantidade</h3>
+                    <div class="ranking-podium" id="podium-quantidade-passada">
+                        <div class="podium-spot spot-2"><div class="podium-rank">#2</div><div class="podium-name" id="podium-qtd-passada-2-name">---</div><div class="podium-score" id="podium-qtd-passada-2-score">---</div></div>
+                        <div class="podium-spot spot-1"><div class="podium-rank">#1 🥇</div><div class="podium-name" id="podium-qtd-passada-1-name">---</div><div class="podium-score" id="podium-qtd-passada-1-score">---</div></div>
+                        <div class="podium-spot spot-3"><div class="podium-rank">#3</div><div class="podium-name" id="podium-qtd-passada-3-name">---</div><div class="podium-score" id="podium-qtd-passada-3-score">---</div></div>
+                    </div>
+                    <h4>Demais Colocações (Quantidade):</h4>
+                    <ol id="ranking-quantidade-passada-lista"></ol>
+                </div>
+
+                <div class="ranking-column" style="flex: 1; min-width: 350px;">
+                    <h3>📊 Top 3 - % de Acerto</h3>
+                    <div class="ranking-podium" id="podium-percentual-passada">
+                        <div class="podium-spot spot-2"><div class="podium-rank">#2</div><div class="podium-name" id="podium-perc-passada-2-name">---</div><div class="podium-score" id="podium-perc-passada-2-score">---</div></div>
+                        <div class="podium-spot spot-1"><div class="podium-rank">#1 🥇</div><div class="podium-name" id="podium-perc-passada-1-name">---</div><div class="podium-score" id="podium-perc-passada-1-score">---</div></div>
+                        <div class="podium-spot spot-3"><div class="podium-rank">#3</div><div class="podium-name" id="podium-perc-passada-3-name">---</div><div class="podium-score" id="podium-perc-passada-3-score">---</div></div>
+                    </div>
+                    <h4>Demais Colocações (% Acerto):</h4>
+                    <ol id="ranking-percentual-passada-lista"></ol>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <a href="/historico-questoes" style="display: block; text-align: center; margin-top: 30px; font-weight: bold;">Voltar ao Histórico</a>
+    <script src="{{ url_for('static', filename='ranking_semana_passada.js') }}"></script>
+</body>
+</html>

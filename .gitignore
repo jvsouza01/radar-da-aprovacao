@@ -1,0 +1,11 @@
+# Ambiente virtual
+venv/
+__pycache__/
+
+# Arquivos do VSCode
+.vscode/
+
+# Banco de dados SQLite
+# Nota: Em um projeto maior, usaríamos um banco de dados online.
+# Por enquanto, cada deploy no Render começará com um banco zerado, o que é ok para testes.
+*.db

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulado em Andamento - {{ simulado.empresa.nome }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Estilos específicos do cronômetro */
+        .cronometro-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: var(--primary-green);
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--bg-dark);
+        }
+        .materias-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .materia-btn {
+            padding: 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+        .materia-btn:hover {
+            border-color: var(--primary-green);
+        }
+        .materia-btn.active {
+            background-color: var(--primary-green);
+            color: var(--bg-dark);
+            border-color: var(--primary-green);
+        }
+        .controles-gerais {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulado em Andamento</h1>
+    
+    <div class="container" style="flex-direction: column; align-items: center;">
+        <section class="ranking-section" style="width: 100%; max-width: 800px;">
+            <h2>{{ simulado.empresa.nome }} - {% if simulado.numero %}Nº {{ simulado.numero }}{% else %}{{ simulado.nome_especifico }}{% endif %} ({{ simulado.categoria }})</h2>
+
+            <div>
+                <h3 style="text-align: center;">Tempo Total</h3>
+                <div id="cronometro-geral" class="cronometro-display">00:00:00</div>
+            </div>
+            <div>
+                <h3 style="text-align: center;">Tempo da Matéria Atual</h3>
+                <div id="cronometro-materia" class="cronometro-display">00:00:00</div>
+            </div>
+            
+            <h3>Selecione a matéria que está fazendo:</h3>
+            <div class="materias-grid" id="grid-materias">
+                <button class="materia-btn" data-materia="Português">Português</button>
+                <button class="materia-btn" data-materia="Direito">Direito</button>
+                <button class="materia-btn" data-materia="RLM">RLM</button>
+                <button class="materia-btn" data-materia="Informática">Informática</button>
+                <button class="materia-btn" data-materia="Outra">Outra</button>
+            </div>
+
+            <div class="controles-gerais">
+                <button id="btn-pausa" class="action-button" style="background-color: #ffc107; color: var(--bg-dark);">Pausar ⏸</button>
+                <button id="btn-finalizar" class="action-button" style="background-color: #dc3545;">Finalizar Prova 🏁</button>
+            </div>
+
+            <div id="finalizar-secao" style="display:none; margin-top: 30px; text-align: center;">
+                <h3>Simulado Finalizado!</h3>
+                <p>Tempo Total: <strong id="tempo-final-display"></strong></p>
+                <label for="aluno-select">Selecione seu nome para salvar:</label>
+                <select id="aluno-select" style="margin-top: 10px;">
+                    <option value="">Carregando...</option>
+                </select>
+                <button id="btn-salvar" class="action-button" style="margin-top: 20px;">Salvar Tempos</button>
+            </div>
+            
+            <script>
+                const SIMULADO_ID = {{ simulado.id }};
+            </script>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='iniciar_simulado.js') }}"></script>
+</body>
+</html>

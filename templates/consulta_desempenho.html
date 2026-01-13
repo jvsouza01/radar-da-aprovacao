@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Desempenho - Mentoria Odisseia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Estilos Específicos para esta página */
+        .resumo-cards {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .card-dado {
+            flex: 1;
+            min-width: 200px;
+            background-color: var(--input-bg);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-dado h3 {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 10px;
+            border: none;
+            padding: 0;
+        }
+
+        .card-valor {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--text-headings);
+        }
+
+        .valor-verde { color: var(--primary-green); }
+        .valor-azul { color: #3b82f6; }
+
+        /* --- ATUALIZAÇÃO AQUI --- */
+        /* Aumentamos a altura para 550px para comportar melhor muitos dados */
+        .grafico-container {
+            position: relative;
+            background-color: var(--card-dark);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+            height: 550px; /* <--- MUDANÇA: Aumentado de 400px para 550px */
+            width: 100%;
+        }
+
+        /* Tabela de Dados Diários */
+        .tabela-diaria {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: var(--input-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tabela-diaria th, .tabela-diaria td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tabela-diaria th {
+            background-color: #333;
+            color: var(--primary-green);
+            font-weight: bold;
+        }
+
+        .tabela-diaria tr:last-child td { border-bottom: none; }
+        .tabela-diaria tr:hover { background-color: rgba(255,255,255,0.05); }
+
+    </style>
+</head>
+<body>
+    <h1>Consulta Individual de Desempenho</h1>
+
+    <div class="container" style="flex-direction: column;">
+        
+        <section class="form-section" style="width: 100%; max-width: 1200px; margin-bottom: 20px;">
+            <form id="form-consulta" style="flex-direction: row; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="aluno">Selecione o Aluno:</label>
+                    <select id="aluno" required>
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+                
+                <div style="flex: 1; min-width: 150px;">
+                    <label for="inicio">Data Início:</label>
+                    <input type="date" id="inicio" required>
+                </div>
+
+                <div style="flex: 1; min-width: 150px;">
+                    <label for="fim">Data Fim:</label>
+                    <input type="date" id="fim" required>
+                </div>
+
+                <button type="submit" style="height: 48px; margin-bottom: 1px;">Consultar</button>
+            </form>
+        </section>
+
+        <section id="area-resultados" style="width: 100%; max-width: 1200px; display: none;">
+            
+            <h2 id="titulo-resultado" style="margin-bottom: 20px;">Resultado: ---</h2>
+
+            <div class="resumo-cards">
+                <div class="card-dado">
+                    <h3>Total de Questões</h3>
+                    <div class="card-valor" id="res-total">0</div>
+                </div>
+                <div class="card-dado">
+                    <h3>Total de Acertos</h3>
+                    <div class="card-valor valor-verde" id="res-acertos">0</div>
+                </div>
+                <div class="card-dado">
+                    <h3>Aproveitamento</h3>
+                    <div class="card-valor valor-azul" id="res-percentual">0%</div>
+                </div>
+            </div>
+
+            <div class="grafico-container">
+                <canvas id="graficoDesempenho"></canvas>
+            </div>
+
+            <h3>Detalhamento Diário</h3>
+            <table class="tabela-diaria">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Questões</th>
+                        <th>Acertos</th>
+                        <th>% Aproveitamento</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-corpo">
+                    </tbody>
+            </table>
+
+        </section>
+    </div>
+
+    <a href="/" style="margin-top: 30px; font-weight: bold;">Voltar para o Menu</a>
+
+    <script>
+        // --- 1. Configuração Inicial ---
+        let meuGrafico = null; 
+        const selectAluno = document.getElementById('aluno');
+        const areaResultados = document.getElementById('area-resultados');
+
+        const hoje = new Date();
+        const semanaPassada = new Date();
+        semanaPassada.setDate(hoje.getDate() - 7);
+        
+        document.getElementById('fim').value = hoje.toISOString().split('T')[0];
+        document.getElementById('inicio').value = semanaPassada.toISOString().split('T')[0];
+
+        // --- 2. Carregar Alunos ---
+        async function carregarAlunos() {
+            try {
+                const res = await fetch('/api/alunos');
+                const alunos = await res.json();
+                selectAluno.innerHTML = '<option value="">Selecione...</option>';
+                alunos.forEach(aluno => {
+                    const opt = document.createElement('option');
+                    opt.value = aluno.id;
+                    opt.textContent = aluno.nome;
+                    selectAluno.appendChild(opt);
+                });
+            } catch (error) { console.error("Erro ao carregar alunos", error); }
+        }
+        carregarAlunos();
+
+        // --- 3. Enviar Consulta ---
+        document.getElementById('form-consulta').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const alunoId = selectAluno.value;
+            const inicio = document.getElementById('inicio').value;
+            const fim = document.getElementById('fim').value;
+
+            if(!alunoId) { alert("Selecione um aluno!"); return; }
+
+            try {
+                const url = `/api/consulta/desempenho?aluno_id=${alunoId}&inicio=${inicio}&fim=${fim}`;
+                const res = await fetch(url);
+                
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(err.erro || "Erro na consulta");
+                    return;
+                }
+
+                const dados = await res.json();
+                renderizarResultados(dados);
+
+            } catch (error) { console.error("Erro na consulta", error); }
+        });
+
+        // --- 4. Renderizar a Tela ---
+        function renderizarResultados(dados) {
+            areaResultados.style.display = 'block';
+            document.getElementById('titulo-resultado').textContent = `Desempenho: ${dados.aluno_nome}`;
+            
+            document.getElementById('res-total').textContent = dados.total_questoes;
+            document.getElementById('res-acertos').textContent = dados.total_acertos;
+            document.getElementById('res-percentual').textContent = dados.percentual_total + '%';
+
+            const tbody = document.getElementById('tabela-corpo');
+            tbody.innerHTML = '';
+            
+            const labelsGrafico = [];
+            const dadosQuestoes = [];
+            const dadosAcertos = [];
+
+            if (dados.dados_diarios.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Nenhum registro no período.</td></tr>';
+            } else {
+                dados.dados_diarios.forEach(dia => {
+                    const dataFormatada = dia.data.split('-').reverse().join('/');
+                    labelsGrafico.push(dataFormatada);
+                    dadosQuestoes.push(dia.questoes);
+                    dadosAcertos.push(dia.acertos);
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${dataFormatada}</td>
+                        <td>${dia.questoes}</td>
+                        <td>${dia.acertos}</td>
+                        <td style="color: ${dia.percentual >= 80 ? 'var(--primary-green)' : '#fff'}">
+                            ${dia.percentual}%
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            atualizarGrafico(labelsGrafico, dadosQuestoes, dadosAcertos);
+        }
+
+        // --- 5. Lógica do Gráfico ---
+        function atualizarGrafico(labels, questoes, acertos) {
+            const ctx = document.getElementById('graficoDesempenho').getContext('2d');
+
+            if (meuGrafico) {
+                meuGrafico.destroy();
+            }
+
+            meuGrafico = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Questões Feitas',
+                            data: questoes,
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1,
+                            maxBarThickness: 50 // Garante que a barra não fique gigante com poucos dados
+                        },
+                        {
+                            label: 'Acertos',
+                            data: acertos,
+                            backgroundColor: 'rgba(32, 201, 151, 0.7)',
+                            borderColor: '#20c997',
+                            borderWidth: 1,
+                            maxBarThickness: 50 // Garante que a barra não fique gigante com poucos dados
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#444' },
+                            ticks: { color: '#fff' }
+                        },
+                        x: {
+                            ticks: { color: '#fff' },
+                            grid: { display: false } // Remove grade vertical para limpar visual
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

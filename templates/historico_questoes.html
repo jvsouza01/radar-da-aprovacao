@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Questões - Mentoria Odisseia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Histórico de Rankings (Questões)</h1>
+    
+    <div class="container" style="flex-direction: column; align-items: center; gap: 30px;">
+        <a href="/ranking-geral" class="nav-button" style="width: 100%; max-width: 600px; padding: 30px; font-size: 1.5em;">
+            Ver Ranking Geral (All-Time)
+        </a>
+        
+        <a href="/ranking-semana-passada" class="nav-button" style="width: 100%; max-width: 600px; padding: 30px; font-size: 1.5em;">
+            Ver Ranking da Semana Passada
+        </a>
+    </div>
+
+    <a href="/" style="display: block; text-align: center; margin-top: 30px; font-weight: bold;">Voltar para o Ranking da Semana</a>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Definir Times - Mentoria Odisseia</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .aluno-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; border-bottom: 1px solid #444;
+        }
+        .btn-time {
+            padding: 5px 15px; cursor: pointer; border: 1px solid #555; background: #333; color: white;
+            margin-left: 5px; border-radius: 4px;
+        }
+        .btn-time.alpha.active { background-color: #3b82f6; border-color: #3b82f6; } /* Azul */
+        .btn-time.omega.active { background-color: #ef4444; border-color: #ef4444; } /* Vermelho */
+    </style>
+</head>
+<body>
+    <h1>Gerenciar Times (Alpha vs Omega)</h1>
+    <div class="container" style="flex-direction: column;">
+        <div id="lista-alunos" class="form-section" style="width: 100%; max-width: 800px;">
+            Carregando alunos...
+        </div>
+    </div>
+    <a href="/" style="margin-top: 20px;">Voltar</a>
+
+    <script>
+        async function carregar() {
+            const divLista = document.getElementById('lista-alunos');
+            const res = await fetch('/api/alunos-com-time');
+            const alunos = await res.json();
+            
+            divLista.innerHTML = '';
+            alunos.forEach(aluno => {
+                const row = document.createElement('div');
+                row.className = 'aluno-row';
+                
+                const isAlpha = aluno.time === 'Alpha' ? 'active' : '';
+                const isOmega = aluno.time === 'Omega' ? 'active' : '';
+
+                row.innerHTML = `
+                    <span>${aluno.nome}</span>
+                    <div>
+                        <button onclick="salvarTime(${aluno.id}, 'Alpha')" class="btn-time alpha ${isAlpha}">Alpha</button>
+                        <button onclick="salvarTime(${aluno.id}, 'Omega')" class="btn-time omega ${isOmega}">Omega</button>
+                    </div>
+                `;
+                divLista.appendChild(row);
+            });
+        }
+
+        async function salvarTime(id, time) {
+            await fetch('/api/alunos/atualizar-time', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({aluno_id: id, time: time})
+            });
+            carregar(); // Recarrega para atualizar as cores
+        }
+        carregar();
+    </script>
+</body>
+</html>
