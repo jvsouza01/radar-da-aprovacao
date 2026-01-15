@@ -1,8 +1,8 @@
-# Projeto Mentoria Odisseia - Painel de Desempenho 🚀
+# Projeto Radar da Aprovação - Painel de Desempenho 🚀
 
 ## Visão Geral
 
-Esta aplicação web foi desenvolvida como uma ferramenta de **accountability e gamificação** para o grupo de estudos "Mentoria Odisseia", focado na preparação para concursos públicos (principalmente PMBA). O objetivo principal é centralizar o registro de desempenho dos alunos, promovendo a **constância, a análise individual e a competição saudável** dentro do grupo.
+Esta aplicação web foi desenvolvida como uma ferramenta de **accountability e gamificação** para o grupo de estudos "Radar da Aprovação", focado na preparação para concursos públicos (principalmente PMBA). O objetivo principal é centralizar o registro de desempenho dos alunos, promovendo a **constância, a análise individual e a competição saudável** dentro do grupo.
 
 O projeto nasceu da necessidade de sair de métodos desorganizados (planilhas, grupos de WhatsApp) para um sistema centralizado que oferecesse métricas claras e rankings atualizados, servindo tanto para o acompanhamento individual quanto para a motivação coletiva.
 
@@ -42,6 +42,6 @@ O projeto nasceu da necessidade de sair de métodos desorganizados (planilhas, g
 
 ## Status do Projeto
 
-Atualmente, a aplicação está **ativa e em uso** pelo grupo Mentoria Odisseia. Serve como uma ferramenta diária de acompanhamento e motivação.
+Atualmente, a aplicação está **ativa e em uso** pelo grupo Radar da Aprovação. Serve como uma ferramenta diária de acompanhamento e motivação.
 
 ---

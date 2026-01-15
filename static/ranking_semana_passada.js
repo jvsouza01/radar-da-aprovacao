@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    
+
     // Variável para guardar o título original da página
     let tituloOriginal = document.title;
     let nomeArquivoPDF = "Ranking_Semana_Passada";
@@ -29,10 +29,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const omegaDiv = document.getElementById('bat-omega-qtd').parentElement;
                 omegaDiv.classList.add('text-omega');
 
-                document.getElementById('bat-alpha-qtd').innerText = data.batalha.Alpha.questoes;
-                document.getElementById('bat-alpha-perc').innerText = data.batalha.Alpha.precisao + '%';
-                document.getElementById('bat-omega-qtd').innerText = data.batalha.Omega.questoes;
-                document.getElementById('bat-omega-perc').innerText = data.batalha.Omega.precisao + '%';
+                document.getElementById('bat-gui-qtd').innerText = data.batalha.GUI.questoes;
+                document.getElementById('bat-gui-perc').innerText = data.batalha.GUI.precisao + '%';
+                document.getElementById('bat-enzo-qtd').innerText = data.batalha.ENZO.questoes;
+                document.getElementById('bat-enzo-perc').innerText = data.batalha.ENZO.precisao + '%';
                 document.getElementById('bat-vencedor').innerText = data.batalha.vencedor;
             }
 
@@ -51,17 +51,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         [1, 2, 3].forEach(i => {
             const elName = document.getElementById(`podium-${prefixo}-${i}-name`);
             const elScore = document.getElementById(`podium-${prefixo}-${i}-score`);
-            if(elName) elName.innerText = '---';
-            if(elScore) elScore.innerText = `--- ${unidade}`;
+            if (elName) elName.innerText = '---';
+            if (elScore) elScore.innerText = `--- ${unidade}`;
         });
         lista.slice(0, 3).forEach((p, index) => {
             const i = index + 1;
             const elName = document.getElementById(`podium-${prefixo}-${i}-name`);
             const elScore = document.getElementById(`podium-${prefixo}-${i}-score`);
             let val = p[campoValor];
-            if(unidade === '%') val = parseFloat(val).toFixed(2);
-            if(elName) elName.innerText = p.nome;
-            if(elScore) elScore.innerText = `${val} ${unidade}`;
+            if (unidade === '%') val = parseFloat(val).toFixed(2);
+            if (elName) elName.innerText = p.nome;
+            if (elScore) elScore.innerText = `${val} ${unidade}`;
         });
     }
 
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (let i = 3; i < lista.length; i++) {
             const item = lista[i];
             let valor = item[campoValor];
-            if(unidade === '%') valor = parseFloat(valor).toFixed(2);
+            if (unidade === '%') valor = parseFloat(valor).toFixed(2);
             const li = document.createElement('li');
             li.innerHTML = `<span>${i + 1}. ${item.nome}</span><strong>${valor} ${unidade}</strong>`;
             ol.appendChild(li);
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btnPdf.addEventListener('click', () => {
             // 1. Muda o título da página (isso define o nome do arquivo PDF)
             document.title = nomeArquivoPDF;
-            
+
             // 2. Abre a impressão
             window.print();
 

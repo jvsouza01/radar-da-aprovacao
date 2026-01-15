@@ -12,6 +12,10 @@ db_url = os.environ.get("DATABASE_URL")
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
+# Se não há DATABASE_URL (desenvolvimento local), usa SQLite
+if not db_url:
+    db_url = 'sqlite:///radar_aprovacao.db'
+
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {"pool_pre_ping": True}
@@ -82,12 +86,7 @@ def iniciar_banco():
         
         # 1. Alunos (Verifica antes de adicionar)
         lista_alunos_final = [
-            'Alan vitor', 'Andressa', 'Dann Silva', 'Davy', 'Dias', 'Dhomini', 
-            'Eduardo', 'Eliaquim', 'Ell Souza', 'Ezequias', 'Flavia Andrade', 
-            'Hélio', 'Ingrid', 'Isaac', 'Jonathan Estevam', 'Jovino', 'JP', 
-            'Leonardo', 'Liu', 'Marcela', 'Marco Antônio', 'Marcos Vinicius', 
-            'Mariana', 'Matheus Silva', 'MV', 'Nelson', 'Rafael', 'Rodrigo', 
-            'Samuel', 'Santiago', 'Silva', 'Vinicius Felipe', 'Vithor', 'Yan'
+            'Luis Guilherme', 'Enzo Gabriel', 'João Vithor'
         ]
         alunos_adicionados = 0
         for nome_aluno in lista_alunos_final:
@@ -204,8 +203,8 @@ def get_placar_times():
             }
 
         return jsonify({
-            'Alpha': buscar_dados_time('Alpha'),
-            'Omega': buscar_dados_time('Omega')
+            'GUI': buscar_dados_time('GUI'),
+            'ENZO': buscar_dados_time('ENZO')
         })
 
 # Atualize a API de alunos para retornar o time atual também
@@ -374,17 +373,17 @@ def get_rankings_semana_passada():
         precisao = (total_a / total_q * 100) if total_q > 0 else 0
         return {'questoes': total_q, 'precisao': round(precisao, 2)}
 
-    alpha = calcular_time('Alpha')
-    omega = calcular_time('Omega')
+    gui = calcular_time('GUI')
+    enzo = calcular_time('ENZO')
 
     vencedor = "EMPATE"
-    if alpha['questoes'] > omega['questoes']: vencedor = "ALPHA 🔵"
-    elif omega['questoes'] > alpha['questoes']: vencedor = "OMEGA 🔴"
+    if gui['questoes'] > enzo['questoes']: vencedor = "GUI 🔵"
+    elif enzo['questoes'] > gui['questoes']: vencedor = "ENZO 🔴"
 
     return jsonify({
         'quantidade': [dict(row) for row in ranking_quantidade], 
         'percentual': [dict(row) for row in ranking_percentual],
-        'batalha': {'Alpha': alpha, 'Omega': omega, 'vencedor': vencedor},
+        'batalha': {'GUI': gui, 'ENZO': enzo, 'vencedor': vencedor},
         # --- NOVO: Envia as datas formatadas ---
         'periodo': {
             'inicio': start_of_last_week.strftime('%d/%m/%Y'),
@@ -507,3 +506,9 @@ def get_consulta_desempenho():
     except Exception as e:
         db.session.rollback()
         return jsonify({'erro': f'Erro ao consultar o banco de dados: {e}'}), 500
+
+# --- EXECUÇÃO DO SERVIDOR ---
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()  # Cria as tabelas se não existirem
+    app.run(debug=True, host='0.0.0.0', port=5000)

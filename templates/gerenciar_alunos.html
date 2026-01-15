@@ -1,49 +1,91 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Alunos - Mentoria Odisseia</title>
+    <title>Gerenciar Alunos - Radar da Aprovação</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         .aluno-item {
-            display: flex; justify-content: space-between; align-items: center;
-            background: #2a2a2a; padding: 10px 15px; margin-bottom: 8px; border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2a2a2a;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 5px;
             border-left: 4px solid #555;
         }
-        .aluno-item.alpha { border-left-color: #3b82f6; }
-        .aluno-item.omega { border-left-color: #ef4444; }
-        
-        .actions { display: flex; gap: 10px; }
-        .btn-edit { background: #f59e0b; color: #000; padding: 5px 10px; border: none; cursor: pointer; border-radius: 3px; font-weight: bold; }
-        .btn-del { background: #ef4444; color: #fff; padding: 5px 10px; border: none; cursor: pointer; border-radius: 3px; font-weight: bold; }
-        
+
+        .aluno-item.alpha {
+            border-left-color: #3b82f6;
+        }
+
+        .aluno-item.omega {
+            border-left-color: #ef4444;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-edit {
+            background: #f59e0b;
+            color: #000;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .btn-del {
+            background: #ef4444;
+            color: #fff;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
         /* Form mode edit */
-        .editing-mode input, .editing-mode select { border-color: #f59e0b; }
-        .editing-mode button[type="submit"] { background-color: #f59e0b; color: black; }
+        .editing-mode input,
+        .editing-mode select {
+            border-color: #f59e0b;
+        }
+
+        .editing-mode button[type="submit"] {
+            background-color: #f59e0b;
+            color: black;
+        }
     </style>
 </head>
+
 <body>
     <h1>Gerenciar Alunos</h1>
-    
+
     <div class="container" style="flex-direction: column; align-items: center;">
-        
+
         <div class="form-section" style="width: 100%; max-width: 600px;">
             <h2 id="form-title">Adicionar Novo Aluno</h2>
             <form id="form-aluno">
                 <input type="hidden" id="aluno-id"> <label for="nome">Nome do Aluno:</label>
                 <input type="text" id="nome" required placeholder="Ex: João Silva">
-                
+
                 <label for="time">Time:</label>
                 <select id="time">
                     <option value="Sem Time">Sem Time</option>
-                    <option value="Alpha">Alpha 🔵</option>
-                    <option value="Omega">Omega 🔴</option>
+                    <option value="GUI">GUI 🔵</option>
+                    <option value="ENZO">ENZO 🔴</option>
                 </select>
 
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button type="submit" id="btn-submit" style="flex: 2;">Adicionar Aluno</button>
-                    <button type="button" id="btn-cancel" style="flex: 1; background: #555; display: none;">Cancelar</button>
+                    <button type="button" id="btn-cancel"
+                        style="flex: 1; background: #555; display: none;">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -70,7 +112,7 @@
         async function carregarAlunos() {
             const res = await fetch('/api/alunos-com-time');
             const alunos = await res.json();
-            
+
             listaDiv.innerHTML = '';
             alunos.forEach(aluno => {
                 const div = document.createElement('div');
@@ -94,7 +136,7 @@
             e.preventDefault();
             const id = inputId.value;
             const dados = { nome: inputNome.value, time: inputTime.value };
-            
+
             let url = '/api/alunos';
             let method = 'POST';
 
@@ -106,10 +148,10 @@
             try {
                 const res = await fetch(url, {
                     method: method,
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dados)
                 });
-                
+
                 if (res.ok) {
                     alert(id ? 'Aluno atualizado!' : 'Aluno criado!');
                     resetarForm();
@@ -126,13 +168,13 @@
             inputId.value = id;
             inputNome.value = nome;
             inputTime.value = time || 'Sem Time';
-            
+
             // Muda visual do form
             formTitle.innerText = `Editando: ${nome}`;
             btnSubmit.innerText = "Salvar Alterações";
             btnCancel.style.display = "block";
             form.parentElement.classList.add('editing-mode');
-            
+
             // Rola para cima
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -152,8 +194,8 @@
 
         // 5. Deletar
         window.deletar = async (id, nome) => {
-            if(!confirm(`ATENÇÃO: Deletar o aluno "${nome}" apagará todo o histórico de questões e simulados dele.\n\nTem certeza?`)) return;
-            
+            if (!confirm(`ATENÇÃO: Deletar o aluno "${nome}" apagará todo o histórico de questões e simulados dele.\n\nTem certeza?`)) return;
+
             await fetch(`/api/alunos/${id}`, { method: 'DELETE' });
             carregarAlunos();
         }
@@ -161,4 +203,5 @@
         carregarAlunos();
     </script>
 </body>
+
 </html>

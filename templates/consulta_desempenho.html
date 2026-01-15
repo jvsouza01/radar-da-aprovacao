@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Desempenho - Mentoria Odisseia</title>
+    <title>Consulta de Desempenho - Radar da Aprovação</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -23,7 +24,7 @@
             border-radius: 8px;
             text-align: center;
             border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .card-dado h3 {
@@ -40,8 +41,13 @@
             color: var(--text-headings);
         }
 
-        .valor-verde { color: var(--primary-green); }
-        .valor-azul { color: #3b82f6; }
+        .valor-verde {
+            color: var(--primary-green);
+        }
+
+        .valor-azul {
+            color: #3b82f6;
+        }
 
         /* --- ATUALIZAÇÃO AQUI --- */
         /* Aumentamos a altura para 550px para comportar melhor muitos dados */
@@ -52,7 +58,8 @@
             border-radius: 8px;
             border: 1px solid var(--border-color);
             margin-bottom: 30px;
-            height: 550px; /* <--- MUDANÇA: Aumentado de 400px para 550px */
+            height: 550px;
+            /* <--- MUDANÇA: Aumentado de 400px para 550px */
             width: 100%;
         }
 
@@ -66,7 +73,8 @@
             overflow: hidden;
         }
 
-        .tabela-diaria th, .tabela-diaria td {
+        .tabela-diaria th,
+        .tabela-diaria td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
@@ -78,16 +86,21 @@
             font-weight: bold;
         }
 
-        .tabela-diaria tr:last-child td { border-bottom: none; }
-        .tabela-diaria tr:hover { background-color: rgba(255,255,255,0.05); }
+        .tabela-diaria tr:last-child td {
+            border-bottom: none;
+        }
 
+        .tabela-diaria tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
     </style>
 </head>
+
 <body>
     <h1>Consulta Individual de Desempenho</h1>
 
     <div class="container" style="flex-direction: column;">
-        
+
         <section class="form-section" style="width: 100%; max-width: 1200px; margin-bottom: 20px;">
             <form id="form-consulta" style="flex-direction: row; flex-wrap: wrap; align-items: flex-end;">
                 <div style="flex: 1; min-width: 200px;">
@@ -96,7 +109,7 @@
                         <option value="">Carregando...</option>
                     </select>
                 </div>
-                
+
                 <div style="flex: 1; min-width: 150px;">
                     <label for="inicio">Data Início:</label>
                     <input type="date" id="inicio" required>
@@ -112,7 +125,7 @@
         </section>
 
         <section id="area-resultados" style="width: 100%; max-width: 1200px; display: none;">
-            
+
             <h2 id="titulo-resultado" style="margin-bottom: 20px;">Resultado: ---</h2>
 
             <div class="resumo-cards">
@@ -145,7 +158,7 @@
                     </tr>
                 </thead>
                 <tbody id="tabela-corpo">
-                    </tbody>
+                </tbody>
             </table>
 
         </section>
@@ -155,14 +168,14 @@
 
     <script>
         // --- 1. Configuração Inicial ---
-        let meuGrafico = null; 
+        let meuGrafico = null;
         const selectAluno = document.getElementById('aluno');
         const areaResultados = document.getElementById('area-resultados');
 
         const hoje = new Date();
         const semanaPassada = new Date();
         semanaPassada.setDate(hoje.getDate() - 7);
-        
+
         document.getElementById('fim').value = hoje.toISOString().split('T')[0];
         document.getElementById('inicio').value = semanaPassada.toISOString().split('T')[0];
 
@@ -189,12 +202,12 @@
             const inicio = document.getElementById('inicio').value;
             const fim = document.getElementById('fim').value;
 
-            if(!alunoId) { alert("Selecione um aluno!"); return; }
+            if (!alunoId) { alert("Selecione um aluno!"); return; }
 
             try {
                 const url = `/api/consulta/desempenho?aluno_id=${alunoId}&inicio=${inicio}&fim=${fim}`;
                 const res = await fetch(url);
-                
+
                 if (!res.ok) {
                     const err = await res.json();
                     alert(err.erro || "Erro na consulta");
@@ -211,14 +224,14 @@
         function renderizarResultados(dados) {
             areaResultados.style.display = 'block';
             document.getElementById('titulo-resultado').textContent = `Desempenho: ${dados.aluno_nome}`;
-            
+
             document.getElementById('res-total').textContent = dados.total_questoes;
             document.getElementById('res-acertos').textContent = dados.total_acertos;
             document.getElementById('res-percentual').textContent = dados.percentual_total + '%';
 
             const tbody = document.getElementById('tabela-corpo');
             tbody.innerHTML = '';
-            
+
             const labelsGrafico = [];
             const dadosQuestoes = [];
             const dadosAcertos = [];
@@ -281,7 +294,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, 
+                    maintainAspectRatio: false,
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -301,4 +314,5 @@
         }
     </script>
 </body>
+
 </html>

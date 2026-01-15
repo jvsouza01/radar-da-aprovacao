@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Simulados - Mentoria Odisseia</title>
+    <title>Gerenciar Simulados - Radar da Aprovação</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
     <h1>Gerenciamento de Simulados</h1>
 
     <div class="container">
         <div class="form-section" style="flex: 2; display: flex; flex-direction: column; gap: 30px;">
-            
+
             <div class="form-section">
                 <h2>Lançar Nota de Aluno</h2>
                 <form id="form-add-resultado">
@@ -71,7 +73,7 @@
                 <h3>Últimas Notas Lançadas</h3>
                 <ul id="lista-ultimas-notas"></ul>
             </div>
-            
+
             <div class="recent-section">
                 <h3>Empresas Cadastradas</h3>
                 <ul id="lista-empresas"></ul>
@@ -86,4 +88,5 @@
     <a href="/" style="margin-top: 20px; font-weight: bold;">Voltar para a Página Principal</a>
     <script src="{{ url_for('static', filename='gerenciamento_simulados.js') }}"></script>
 </body>
+
 </html>

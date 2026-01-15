@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rankings de Simulados - Mentoria Odisseia</title>
+    <title>Rankings de Simulados - Radar da Aprovação</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
     <h1>Rankings de Simulados</h1>
 
     <div class="container" style="flex-direction: column; align-items: center;">
-        
+
         <section class="form-section" style="width: 100%; max-width: 800px;">
             <h2>Selecionar Simulado</h2>
             <form id="form-filtro-simulado">
@@ -18,8 +20,9 @@
                 <select id="filtro-simulado">
                     <option value="">Carregando simulados...</option>
                 </select>
-                
-                <button type="button" id="btn-ver-ranking" style="margin-top: 15px; width: 100%; padding: 12px; background-color: var(--primary-green); color: var(--bg-dark); font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">
+
+                <button type="button" id="btn-ver-ranking"
+                    style="margin-top: 15px; width: 100%; padding: 12px; background-color: var(--primary-green); color: var(--bg-dark); font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">
                     Ver Ranking
                 </button>
             </form>
@@ -39,4 +42,5 @@
 
     <script src="{{ url_for('static', filename='ranking_simulados.js') }}"></script>
 </body>
+
 </html>

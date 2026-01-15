@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ranking Geral - Mentoria Odisseia</title>
+    <title>Ranking Geral - Radar da Aprovação</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
     <h1>Ranking Geral (All-Time)</h1>
 
     <div class="container" style="flex-direction: column; align-items: center; gap: 30px;">
         <section id="card-ranking-geral" class="ranking-section" style="width: 100%; max-width: 800px;">
-            <h2>Ranking Geral (09/10/25 - Hoje)</h2>
-            
+            <h2>Ranking Geral (11/01/2026 - Hoje)</h2>
+
             <h3>🏆 Top 3 - Quantidade</h3>
             <div class="ranking-podium" id="podium-quantidade-geral">
                 <div class="podium-spot spot-2">
@@ -60,4 +62,5 @@
     <a href="/historico-questoes" style="margin-top: 20px; font-weight: bold;">Voltar ao Histórico</a>
     <script src="{{ url_for('static', filename='ranking_geral.js') }}"></script>
 </body>
+
 </html>

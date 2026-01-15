@@ -3,7 +3,7 @@ import sqlite3
 # Função para criar a conexão com o banco de dados
 def conectar():
     """Conecta ao banco de dados SQLite e retorna o objeto de conexão e o cursor."""
-    conn = sqlite3.connect('mentoria.db')
+    conn = sqlite3.connect('radar_aprovacao.db')
     return conn
 
 # Função para criar as tabelas iniciais
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # Podemos adicionar alguns alunos de exemplo para começar
     try:
         cursor = conn.cursor()
-        alunos_exemplo = [('Vithor',), ('Fabio',), ('MGLWI',)]
+        alunos_exemplo = [('Luis Guilherme',), ('Enzo Gabriel',), ('João Vithor',)]
         cursor.executemany('INSERT INTO alunos (nome) VALUES (?)', alunos_exemplo)
         conn.commit()
         print(f"{len(alunos_exemplo)} alunos de exemplo inseridos com sucesso.")
