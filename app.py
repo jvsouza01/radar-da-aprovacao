@@ -263,6 +263,111 @@ def migrar_autenticacao():
         db.session.rollback()
         return f"❌ Erro na migração: {e}", 500
 
+
+@app.route('/_migrar_completo')
+def migrar_completo():
+    """Migração COMPLETA para adicionar autenticação E usernames em uma única execução."""
+    try:
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        colunas = [c['name'] for c in inspector.get_columns('alunos')]
+        
+        mensagens = []
+        
+        # 1. Adicionar coluna senha_hash se não existir
+        if 'senha_hash' not in colunas:
+            with db.session.connection() as conn:
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN senha_hash VARCHAR(200)"))
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN tipo_usuario VARCHAR(10) DEFAULT 'aluno'"))
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN primeira_vez INTEGER DEFAULT 1"))
+                db.session.commit()
+            mensagens.append("✅ Colunas de autenticação adicionadas")
+        
+        # 2. Adicionar coluna username se não existir
+        if 'username' not in colunas:
+            with db.session.connection() as conn:
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN username VARCHAR(50)"))
+                db.session.commit()
+            mensagens.append("✅ Coluna username adicionada")
+        
+        # 3. AGORA podemos fazer SELECTs, pois as colunas existem
+        
+        # 3a. Gerar usernames para quem não tem
+        def gerar_username(nome_completo):
+            partes = nome_completo.strip().split()
+            if len(partes) == 1:
+                return partes[0].lower()
+            return (partes[0][0] + partes[-1]).lower()
+        
+        alunos = db.session.execute(text("SELECT id, nome, username FROM alunos")).fetchall()
+        usernames_gerados = []
+        
+        for row in alunos:
+            aluno_id, nome, username_atual = row
+            
+            # Se já tem username, pula
+            if username_atual:
+                continue
+            
+            username_proposto = gerar_username(nome)
+            
+            # Verificar unicidade
+            username_final = username_proposto
+            contador = 1
+            while db.session.execute(text("SELECT 1 FROM alunos WHERE username = :u"), {'u': username_final}).first():
+                username_final = f"{username_proposto}{contador}"
+                contador += 1
+            
+            # Atualizar username
+            db.session.execute(text("UPDATE alunos SET username = :u WHERE id = :i"), {'u': username_final, 'i': aluno_id})
+            usernames_gerados.append(f"{nome} → {username_final}")
+        
+        # 3b. Definir senhas e configurar João Vithor como admin
+        alunos_todos = db.session.execute(text("SELECT id, nome, senha_hash FROM alunos")).fetchall()
+        senhas_configuradas = 0
+        
+        for row in alunos_todos:
+            aluno_id, nome, senha_hash_atual = row
+            
+            # Se já tem senha, pula
+            if senha_hash_atual:
+                continue
+            
+            senha_hash = generate_password_hash('senha123')
+            
+            # João Vithor é admin
+            if nome == 'João Vithor':
+                db.session.execute(text(
+                    "UPDATE alunos SET senha_hash = :sh, tipo_usuario = 'admin', primeira_vez = 0 WHERE id = :i"
+                ), {'sh': senha_hash, 'i': aluno_id})
+                mensagens.append(f"👑 João Vithor configurado como ADMIN")
+            else:
+                db.session.execute(text(
+                    "UPDATE alunos SET senha_hash = :sh, tipo_usuario = 'aluno', primeira_vez = 1 WHERE id = :i"
+                ), {'sh': senha_hash, 'i': aluno_id})
+            
+            senhas_configuradas += 1
+        
+        db.session.commit()
+        
+        # Criar índice único em username (PostgreSQL)
+        try:
+            db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_alunos_username ON alunos(username)"))
+            db.session.commit()
+            mensagens.append("✅ Índice único criado em username")
+        except:
+            pass  # SQLite não precisa
+        
+        mensagens.append(f"✅ {senhas_configuradas} senhas configuradas (padrão: senha123)")
+        mensagens.append(f"✅ {len(usernames_gerados)} usernames gerados:")
+        mensagens.extend([f"  • {ug}" for ug in usernames_gerados])
+        
+        return "<br>".join(mensagens), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return f"❌ Erro na migração: {e}", 500
+
 @app.route('/_migrar_adicionar_username')
 def migrar_adicionar_username():
     """Migração para adicionar campo username aos alunos existentes."""
