@@ -3,8 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const registroForm = document.getElementById('registro-form');
     const ultimosLancamentosList = document.getElementById('ultimos-lancamentos');
 
-    // Função para buscar a lista de alunos da nossa API
+    // Função para buscar a lista de alunos da nossa API (SOMENTE PARA ADMIN)
     async function carregarAlunos() {
+        // Se não for admin, não precisa carregar a lista
+        if (usuarioAtual.tipo !== 'admin') {
+            return;
+        }
+
         try {
             const response = await fetch('/api/alunos');
             const alunos = await response.json();
@@ -29,20 +34,25 @@ document.addEventListener('DOMContentLoaded', () => {
             ultimosLancamentosList.innerHTML = ''; // Limpa a lista
 
             if (registros.length === 0) {
-                 ultimosLancamentosList.innerHTML = '<li>Nenhum registro recente.</li>';
+                ultimosLancamentosList.innerHTML = '<li>Nenhum registro recente.</li>';
             } else {
                 registros.forEach(r => {
                     const li = document.createElement('li');
+
+                    // Verificar se o usuário pode apagar este registro
+                    // Admin pode apagar tudo, aluno só pode apagar os próprios
+                    const podeApagar = usuarioAtual.tipo === 'admin' || r.aluno_id === usuarioAtual.id;
+
                     li.innerHTML = `
                         <span>${r.aluno_nome}: ${r.acertos} acertos de ${r.questoes} questões</span>
-                        <button class="delete-btn" data-id="${r.id}">Apagar</button>
+                        ${podeApagar ? `<button class="delete-btn" data-id="${r.id}">Apagar</button>` : ''}
                     `;
                     ultimosLancamentosList.appendChild(li);
                 });
             }
         } catch (error) {
             console.error('Erro ao carregar últimos lançamentos:', error);
-             ultimosLancamentosList.innerHTML = '<li>Erro ao carregar lançamentos.</li>';
+            ultimosLancamentosList.innerHTML = '<li>Erro ao carregar lançamentos.</li>';
         }
     }
 
@@ -57,8 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         // Validação simples
         if (!dados.aluno_id) {
-             alert('Selecione um aluno.');
-             return;
+            alert('Selecione um aluno.');
+            return;
         }
         if (parseInt(dados.acertos) > parseInt(dados.quantidade)) {
             alert('O número de acertos não pode ser maior que a quantidade de questões.');
@@ -72,17 +82,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (response.ok) {
                 registroForm.reset(); // Limpa o formulário
-                // Define o select de aluno de volta para a opção padrão
-                alunoSelect.value = "";
+                // Se for admin, reseta o select; se for aluno, já está com o id fixo
+                if (usuarioAtual.tipo === 'admin') {
+                    alunoSelect.value = "";
+                } else {
+                    // Para aluno, redefine o valor do hidden input
+                    alunoSelect.value = usuarioAtual.id;
+                }
                 await carregarUltimosLancamentos(); // Atualiza a lista de lançamentos
                 alert('Registro adicionado com sucesso!');
             } else {
-                 const result = await response.json().catch(() => ({})); // Tenta pegar erro do backend
-                 alert(`Falha ao salvar o registro. ${result.mensagem || ''}`);
+                const result = await response.json().catch(() => ({})); // Tenta pegar erro do backend
+                alert(`Falha ao salvar o registro. ${result.mensagem || ''}`);
             }
         } catch (error) {
             console.error('Erro ao enviar registro:', error);
-             alert('Erro de comunicação ao salvar registro.');
+            alert('Erro de comunicação ao salvar registro.');
         }
     });
 
@@ -102,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (error) {
                     console.error('Erro ao apagar registro:', error);
-                     alert('Erro de comunicação ao apagar registro.');
+                    alert('Erro de comunicação ao apagar registro.');
                 }
             }
         }

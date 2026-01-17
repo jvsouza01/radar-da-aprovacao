@@ -651,7 +651,7 @@ def add_registro():
 @app.route('/api/registros/recentes', methods=['GET'])
 def get_registros_recentes():
     registros = RegistrosQuestoes.query.order_by(RegistrosQuestoes.id.desc()).limit(10).all()
-    lista_registros = [{'id': r.id, 'aluno_nome': r.aluno.nome, 'questoes': r.quantidade_questoes, 'acertos': r.acertos} for r in registros]
+    lista_registros = [{'id': r.id, 'aluno_id': r.aluno_id, 'aluno_nome': r.aluno.nome, 'questoes': r.quantidade_questoes, 'acertos': r.acertos} for r in registros]
     return jsonify(lista_registros)
 
 @app.route('/api/registros/<int:registro_id>', methods=['DELETE'])
