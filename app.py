@@ -28,7 +28,7 @@ db = SQLAlchemy(app)
 class Alunos(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    username = db.Column(db.String(50), unique=True, nullable=False)
+    username = db.Column(db.String(50), unique=True, nullable=True)  # Nullable para permitir migrações
     time = db.Column(db.String(20), nullable=True, default='Sem Time')
     senha_hash = db.Column(db.String(200), nullable=True)
     tipo_usuario = db.Column(db.String(10), default='aluno')
