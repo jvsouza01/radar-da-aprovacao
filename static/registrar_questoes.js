@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Selecione um aluno.');
             return;
         }
-        if (parseInt(dados.acertos) > parseInt(dados.quantidade)) {
+        if (Number.parseInt(dados.acertos, 10) > Number.parseInt(dados.quantidade, 10)) {
             alert('O número de acertos não pode ser maior que a quantidade de questões.');
             return;
         }

@@ -24,6 +24,11 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {"pool_pre_ping": True}
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 db = SQLAlchemy(app)
 
+# --- CONSTANTES ---
+ADMIN_NAME = 'João Vithor'
+DEFAULT_PASSWORD = 'senha123'
+DATE_FORMAT = '%d/%m/%Y'
+
 # --- MODELOS DO BANCO DE DADOS ---
 class Alunos(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -154,7 +159,8 @@ def iniciar_banco():
 
 # --- FUNÇÃO HELPER DE FUSO HORÁRIO ---
 def get_start_of_week():
-    today_utc = datetime.utcnow()
+    from datetime import timezone
+    today_utc = datetime.now(timezone.utc)
     today_brt = today_utc - timedelta(hours=3)
     days_since_sunday = (today_brt.weekday() - 6 + 7) % 7
     start_of_week_brt = today_brt - timedelta(days=days_since_sunday)
@@ -363,8 +369,8 @@ def migrar_completo():
             db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_alunos_username ON alunos(username)"))
             db.session.commit()
             mensagens.append("✅ Índice único criado em username")
-        except:
-            pass  # SQLite não precisa
+        except Exception:  # Ignora erro se índice já existir ou em SQLite
+            pass
         
         mensagens.append(f"✅ {senhas_configuradas} senhas configuradas (padrão: senha123)")
         mensagens.append(f"✅ {len(usernames_gerados)} usernames gerados:")
@@ -489,7 +495,6 @@ def atualizar_time_aluno():
 @app.route('/api/batalha/placar', methods=['GET'])
 def get_placar_times():
         start_date = get_start_of_week()
-        params = {'start_date': start_date}
         conn = db.session.connection()
 
         # --- FUNÇÃO AUXILIAR PARA BUSCAR TOTAIS E RANKING ---
