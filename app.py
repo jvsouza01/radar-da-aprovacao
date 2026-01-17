@@ -224,6 +224,14 @@ def trocar_senha():
     
     return render_template('trocar_senha.html')
 
+@app.route('/registrar-questoes')
+@login_required
+def registrar_questoes():
+    """Página para registrar questões. Alunos só veem seu próprio nome, admins veem todos."""
+    usuario = get_usuario_atual()
+    return render_template('registrar_questoes.html', usuario=usuario)
+
+
 @app.route('/_migrar_autenticacao')
 def migrar_autenticacao():
     """Migração para adicionar autenticação aos alunos existentes."""
