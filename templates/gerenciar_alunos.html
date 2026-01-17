@@ -75,6 +75,10 @@
                 <input type="hidden" id="aluno-id"> <label for="nome">Nome do Aluno:</label>
                 <input type="text" id="nome" required placeholder="Ex: João Silva">
 
+                <label for="username">Username:</label>
+                <input type="text" id="username" required placeholder="Ex: jsilva" pattern="[a-z0-9]+"
+                    title="Apenas letras minúsculas e números">
+
                 <label for="time">Time:</label>
                 <select id="time">
                     <option value="Sem Time">Sem Time</option>
@@ -106,6 +110,7 @@
         const btnCancel = document.getElementById('btn-cancel');
         const inputId = document.getElementById('aluno-id');
         const inputNome = document.getElementById('nome');
+        const inputUsername = document.getElementById('username');
         const inputTime = document.getElementById('time');
 
         // 1. Carregar Alunos
@@ -120,10 +125,11 @@
                 div.innerHTML = `
                     <div>
                         <strong>${aluno.nome}</strong>
-                        <span style="font-size:0.8em; opacity:0.7; margin-left:10px;">(${aluno.time || 'Sem Time'})</span>
+                        <span style="font-size:0.8em; opacity:0.7; margin-left:10px;">@${aluno.username}</span>
+                        <span style="font-size:0.8em; opacity:0.5; margin-left:5px;">(${aluno.time || 'Sem Time'})</span>
                     </div>
                     <div class="actions">
-                        <button class="btn-edit" onclick="prepararEdicao(${aluno.id}, '${aluno.nome}', '${aluno.time}')">Editar</button>
+                        <button class="btn-edit" onclick="prepararEdicao(${aluno.id}, '${aluno.nome}', '${aluno.username}', '${aluno.time}')">Editar</button>
                         <button class="btn-del" onclick="deletar(${aluno.id}, '${aluno.nome}')">X</button>
                     </div>
                 `;
@@ -135,7 +141,11 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = inputId.value;
-            const dados = { nome: inputNome.value, time: inputTime.value };
+            const dados = {
+                nome: inputNome.value,
+                username: inputUsername.value.toLowerCase(),
+                time: inputTime.value
+            };
 
             let url = '/api/alunos';
             let method = 'POST';
@@ -164,9 +174,10 @@
         });
 
         // 3. Preparar Edição
-        window.prepararEdicao = (id, nome, time) => {
+        window.prepararEdicao = (id, nome, username, time) => {
             inputId.value = id;
             inputNome.value = nome;
+            inputUsername.value = username;
             inputTime.value = time || 'Sem Time';
 
             // Muda visual do form
@@ -185,6 +196,7 @@
         function resetarForm() {
             inputId.value = '';
             inputNome.value = '';
+            inputUsername.value = '';
             inputTime.value = 'Sem Time';
             formTitle.innerText = "Adicionar Novo Aluno";
             btnSubmit.innerText = "Adicionar Aluno";

@@ -9,19 +9,34 @@
 </head>
 
 <body>
-    <h1>Radar da Aprovação</h1>
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: rgba(30, 30, 45, 0.8); border-bottom: 1px solid #333; margin-bottom: 20px;">
+        <h1 style="margin: 0; border: none; padding: 0;">Radar da Aprovação</h1>
+        {% if usuario %}
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <span style="color: #20c997; font-weight: bold;">👤 {{ usuario.nome }}{% if usuario.tipo_usuario == 'admin'
+                %} (Admin){% endif %}</span>
+            <a href="/trocar-senha" style="color: #888; font-size: 14px;">🔐 Alterar Senha</a>
+            <a href="/logout" style="color: #ff6b6b; font-weight: bold;">Sair</a>
+        </div>
+        {% else %}
+        <a href="/login" style="color: #20c997; font-weight: bold;">Login</a>
+        {% endif %}
+    </div>
 
     <nav class="main-nav">
         <a href="/registrar-questoes" class="nav-button">Registrar Questões</a>
         <a href="/historico-questoes" class="nav-button">Histórico (Questões)</a>
         <a href="/ranking-simulados" class="nav-button">Rankings de Simulados</a>
         <a href="/consulta-desempenho" class="nav-button">Consulta Individual</a>
-        <a href="/gerenciar-simulados" class="nav-button">Registrar Simulados</a>
 
         <a href="/batalha-times" class="nav-button btn-highlight">Batalha de Pelotão</a>
 
+        {% if usuario and usuario.tipo_usuario == 'admin' %}
+        <a href="/gerenciar-simulados" class="nav-button">Registrar Simulados</a>
         <a href="/gerenciar-times" class="nav-button btn-admin">Times (Admin)</a>
         <a href="/gerenciar-alunos" class="nav-button btn-admin">Alunos (Admin)</a>
+        {% endif %}
     </nav>
 
     <div class="container" style="flex-direction: column; align-items: center; width: 100%; max-width: 1400px;">

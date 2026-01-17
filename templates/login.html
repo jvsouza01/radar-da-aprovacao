@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Radar do Aprovado</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+        }
+
+        .login-box {
+            background: rgba(22, 22, 35, 0.9);
+            border: 1px solid #2a2a40;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-title {
+            text-align: center;
+            color: #fff;
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(30, 30, 45, 0.8);
+            border: 1px solid #3a3a50;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff4444;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #cc0000 0%, #ff4444 100%);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff6b6b;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <h1 class="login-title">🎯 Radar do Aprovado</h1>
+            <p class="login-subtitle">Faça login para continuar</p>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="username"
+                        placeholder="Ex: lguilherme">
+                </div>
+
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" name="senha" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-login">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const senha = document.getElementById('senha').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, senha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Login bem-sucedido
+                    window.location.href = data.redirect;
+                } else {
+                    // Erro de autenticação
+                    errorMsg.textContent = data.erro || 'Erro ao fazer login';
+                    errorMsg.classList.add('show');
+                }
+            } catch (error) {
+                errorMsg.textContent = 'Erro de conexão. Tente novamente.';
+                errorMsg.classList.add('show');
+            }
+        });
+
+        // Limpar mensagem de erro ao digitar
+        document.getElementById('username').addEventListener('input', () => {
+            errorMsg.classList.remove('show');
+        });
+        document.getElementById('senha').addEventListener('input', () => {
+            errorMsg.classList.remove('show');
+        });
+    </script>
+</body>
+
+</html>

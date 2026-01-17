@@ -14,10 +14,16 @@ def criar_tabelas(conn):
     # Criar a tabela de alunos
     # O id será a chave primária que se auto-incrementa
     # O nome será um texto, que não pode ser nulo e deve ser único
+    # senha_hash: hash da senha do usuário
+    # tipo_usuario: 'aluno' ou 'admin'
+    # primeira_vez: flag para forçar troca de senha no primeiro login
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS alunos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL UNIQUE
+            nome TEXT NOT NULL UNIQUE,
+            senha_hash TEXT,
+            tipo_usuario TEXT DEFAULT 'aluno',
+            primeira_vez INTEGER DEFAULT 1
         )
     ''')
     

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trocar Senha - Radar do Aprovado</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .senha-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+        }
+
+        .senha-box {
+            background: rgba(22, 22, 35, 0.9);
+            border: 1px solid #2a2a40;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .senha-title {
+            text-align: center;
+            color: #fff;
+            font-size: 26px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .senha-subtitle {
+            text-align: center;
+            color: #ff8866;
+            font-size: 14px;
+            margin-bottom: 25px;
+            background: rgba(255, 136, 102, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #ff8866;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(30, 30, 45, 0.8);
+            border: 1px solid #3a3a50;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ff4444;
+        }
+
+        .senha-requirements {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .btn-trocar {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #cc0000 0%, #ff4444 100%);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-trocar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+        }
+
+        .btn-trocar:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .message.error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff6b6b;
+        }
+
+        .message.success {
+            background: rgba(32, 201, 151, 0.1);
+            border: 1px solid rgba(32, 201, 151, 0.3);
+            color: #20c997;
+        }
+
+        .message.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="senha-container">
+        <div class="senha-box">
+            <h1 class="senha-title">🔐 Alterar Senha</h1>
+            <p class="senha-subtitle">
+                ⚠️ Este é seu primeiro acesso. Por favor, defina uma nova senha.
+            </p>
+
+            <div id="message" class="message"></div>
+
+            <form id="senhaForm">
+                <div class="form-group">
+                    <label for="nova_senha">Nova Senha</label>
+                    <input type="password" id="nova_senha" name="nova_senha" required autocomplete="new-password">
+                    <div class="senha-requirements">Mínimo de 4 caracteres</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirma_senha">Confirmar Nova Senha</label>
+                    <input type="password" id="confirma_senha" name="confirma_senha" required
+                        autocomplete="new-password">
+                </div>
+
+                <button type="submit" class="btn-trocar">Confirmar Nova Senha</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('senhaForm');
+        const message = document.getElementById('message');
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = `message ${type} show`;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const novaSenha = document.getElementById('nova_senha').value;
+            const confirmaSenha = document.getElementById('confirma_senha').value;
+
+            // Validação no frontend
+            if (novaSenha.length < 4) {
+                showMessage('A senha deve ter pelo menos 4 caracteres', 'error');
+                return;
+            }
+
+            if (novaSenha !== confirmaSenha) {
+                showMessage('As senhas não coincidem', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/trocar-senha', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nova_senha: novaSenha, confirma_senha: confirmaSenha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Senha alterada com sucesso! Redirecionando...', 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1500);
+                } else {
+                    showMessage(data.erro || 'Erro ao alterar senha', 'error');
+                }
+            } catch (error) {
+                showMessage('Erro de conexão. Tente novamente.', 'error');
+            }
+        });
+
+        // Limpar mensagens ao digitar
+        document.getElementById('nova_senha').addEventListener('input', () => {
+            message.classList.remove('show');
+        });
+        document.getElementById('confirma_senha').addEventListener('input', () => {
+            message.classList.remove('show');
+        });
+    </script>
+</body>
+
+</html>

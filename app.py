@@ -1,9 +1,11 @@
 import os
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text, func, Date
 from sqlalchemy.orm import joinedload
 from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -19,13 +21,24 @@ if not db_url:
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {"pool_pre_ping": True}
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 db = SQLAlchemy(app)
 
 # --- MODELOS DO BANCO DE DADOS ---
 class Alunos(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), unique=True, nullable=False)
-    time = db.Column(db.String(20), nullable=True, default='Sem Time') 
+    nome = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    time = db.Column(db.String(20), nullable=True, default='Sem Time')
+    senha_hash = db.Column(db.String(200), nullable=True)
+    tipo_usuario = db.Column(db.String(10), default='aluno')
+    primeira_vez = db.Column(db.Integer, default=1)
+    
+    def set_senha(self, senha):
+        self.senha_hash = generate_password_hash(senha)
+    
+    def check_senha(self, senha):
+        return check_password_hash(self.senha_hash, senha) 
 
 class RegistrosQuestoes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -57,6 +70,35 @@ class ResultadosSimulados(db.Model):
     
     aluno = db.relationship('Alunos', backref=db.backref('resultados_simulados', lazy=True))
     simulado = db.relationship('Simulados', backref=db.backref('resultados_simulados', lazy=True))
+
+
+# --- AUTENTICAÇÃO ---
+
+def get_usuario_atual():
+    """Retorna o aluno logado ou None."""
+    if 'user_id' not in session:
+        return None
+    return Alunos.query.get(session['user_id'])
+
+def login_required(f):
+    """Decorador para rotas que exigem autenticação."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    """Decorador para rotas que exigem perfil de admin."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        if session.get('tipo_usuario') != 'admin':
+            return jsonify({'erro': 'Acesso negado. Apenas administradores.'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 # --- ROTA DE SETUP ---
@@ -120,14 +162,184 @@ def get_start_of_week():
     start_of_week_utc = start_of_week_brt_midnight + timedelta(hours=3)
     return start_of_week_utc
 
+
+# --- ROTAS DE AUTENTICAÇÃO ---
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        dados = request.get_json() if request.is_json else request.form
+        username = dados.get('username', '').strip().lower()
+        senha = dados.get('senha', '')
+        
+        aluno = Alunos.query.filter_by(username=username).first()
+        
+        if not aluno or not aluno.senha_hash:
+            return jsonify({'erro': 'Usuário não encontrado ou sem senha cadastrada'}), 401
+        
+        if not aluno.check_senha(senha):
+            return jsonify({'erro': 'Senha incorreta'}), 401
+        
+        # Login bem-sucedido - criar sessão
+        session['user_id'] = aluno.id
+        session['nome'] = aluno.nome
+        session['tipo_usuario'] = aluno.tipo_usuario
+        
+        # Se for primeira vez, redirecionar para trocar senha
+        if aluno.primeira_vez:
+            return jsonify({'status': 'trocar_senha', 'redirect': url_for('trocar_senha')})
+        
+        # Caso contrário, ir para página inicial
+        redirect_url = url_for('index')
+        return jsonify({'status': 'sucesso', 'redirect': redirect_url})
+    
+    # GET - mostrar formulário de login
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/trocar-senha', methods=['GET', 'POST'])
+@login_required
+def trocar_senha():
+    if request.method == 'POST':
+        dados = request.get_json()
+        nova_senha = dados.get('nova_senha', '').strip()
+        confirma_senha = dados.get('confirma_senha', '').strip()
+        
+        if not nova_senha or len(nova_senha) < 4:
+            return jsonify({'erro': 'A senha deve ter pelo menos 4 caracteres'}), 400
+        
+        if nova_senha != confirma_senha:
+            return jsonify({'erro': 'As senhas não coincidem'}), 400
+        
+        aluno = get_usuario_atual()
+        aluno.set_senha(nova_senha)
+        aluno.primeira_vez = 0
+        db.session.commit()
+        
+        return jsonify({'status': 'sucesso', 'mensagem': 'Senha alterada com sucesso!', 'redirect': url_for('index')})
+    
+    return render_template('trocar_senha.html')
+
+@app.route('/_migrar_autenticacao')
+def migrar_autenticacao():
+    """Migração para adicionar autenticação aos alunos existentes."""
+    try:
+        # 1. Verificar se as colunas já existem
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        colunas = [c['name'] for c in inspector.get_columns('alunos')]
+        
+        # 2. Adicionar colunas se não existirem
+        if 'senha_hash' not in colunas:
+            with db.session.connection() as conn:
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN senha_hash VARCHAR(200)"))
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN tipo_usuario VARCHAR(10) DEFAULT 'aluno'"))
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN primeira_vez INTEGER DEFAULT 1"))
+                db.session.commit()
+        
+        # 3. Definir senha padrão para alunos sem senha
+        alunos_sem_senha = Alunos.query.filter(Alunos.senha_hash == None).all()
+        for aluno in alunos_sem_senha:
+            aluno.set_senha('senha123')  # Senha padrão
+            if aluno.tipo_usuario is None:
+                # João Vithor é o admin
+                if aluno.nome == 'João Vithor':
+                    aluno.tipo_usuario = 'admin'
+                    aluno.primeira_vez = 0  # Admin não precisa trocar senha na primeira vez
+                else:
+                    aluno.tipo_usuario = 'aluno'
+            if aluno.primeira_vez is None:
+                aluno.primeira_vez = 1
+        
+        db.session.commit()
+        
+        return f"Migração concluída! {len(alunos_sem_senha)} alunos atualizados com senha padrão 'senha123'. João Vithor configurado como admin.", 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return f"Erro na migração: {e}", 500
+
+@app.route('/_migrar_adicionar_username')
+def migrar_adicionar_username():
+    """Migração para adicionar campo username aos alunos existentes."""
+    try:
+        from sqlalchemy import inspect
+        inspector = inspect(db.engine)
+        colunas = [c['name'] for c in inspector.get_columns('alunos')]
+        
+        # 1. Adicionar coluna username se não existir
+        if 'username' not in colunas:
+            with db.session.connection() as conn:
+                conn.execute(text("ALTER TABLE alunos ADD COLUMN username VARCHAR(50)"))
+                db.session.commit()
+        
+        # 2. Gerar usernames para alunos que não têm
+        def gerar_username(nome_completo):
+            """Gera username: primeira letra do nome + sobrenome (lowercase, sem espaços)"""
+            partes = nome_completo.strip().split()
+            if len(partes) == 1:
+                return partes[0].lower()
+            return (partes[0][0] + partes[-1]).lower()
+        
+        alunos_sem_username = Alunos.query.filter((Alunos.username == None) | (Alunos.username == '')).all()
+        usernames_gerados = []
+        
+        for aluno in alunos_sem_username:
+            username_proposto = gerar_username(aluno.nome)
+            
+            # Verificar unicidade e adicionar número se necessário
+            username_final = username_proposto
+            contador = 1
+            while Alunos.query.filter_by(username=username_final).first():
+                username_final = f"{username_proposto}{contador}"
+                contador += 1
+            
+            aluno.username = username_final
+            usernames_gerados.append(f"{aluno.nome} → {username_final}")
+            
+            # João Vithor é o admin
+            if aluno.nome == 'João Vithor':
+                aluno.tipo_usuario = 'admin'
+                aluno.primeira_vez = 0  # Admin não precisa trocar senha
+        
+        # 3. Tornar username obrigatório e único
+        if 'username' in colunas:
+            with db.session.connection() as conn:
+                # SQLite não suporta ALTER COLUMN diretamente, então pulamos para SQLite
+                db_type = str(db.engine.url).split(':')[0]
+                if db_type == 'postgresql':
+                    conn.execute(text("ALTER TABLE alunos ALTER COLUMN username SET NOT NULL"))
+                    conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_alunos_username ON alunos(username)"))
+                db.session.commit()
+        
+        db.session.commit()
+        
+        msg = f"✅ Migração concluída! {len(alunos_sem_username)} usernames gerados:\n"
+        msg += "\n".join(usernames_gerados)
+        msg += "\n\n⚠️ João Vithor configurado como ADMINISTRADOR."
+        return msg, 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return f"❌ Erro na migração: {e}", 500
+
+
 # --- ROTAS PRINCIPAIS ---
 @app.route('/')
-def index(): return render_template('index.html')
+def index(): 
+    usuario = get_usuario_atual()
+    return render_template('index.html', usuario=usuario)
 
 @app.route('/registrar-questoes')
+@login_required
 def registrar_questoes(): return render_template('registrar_questoes.html')
 
 @app.route('/historico-questoes')
+@login_required
 def historico_questoes(): return render_template('historico_questoes.html')
 
 @app.route('/ranking-semana-passada')
@@ -141,6 +353,7 @@ def ranking_geral(): return render_template('ranking_geral.html')
 # --- ROTAS DE TIMES ---
 
 @app.route('/gerenciar-times')
+@admin_required
 def gerenciar_times():
     return render_template('gerenciar_times.html')
 
@@ -149,6 +362,7 @@ def batalha_times():
     return render_template('batalha_times.html')
 
 @app.route('/api/alunos/atualizar-time', methods=['POST'])
+@admin_required
 def atualizar_time_aluno():
     dados = request.get_json()
     aluno = Alunos.query.get(dados['aluno_id'])
@@ -211,7 +425,7 @@ def get_placar_times():
 @app.route('/api/alunos-com-time', methods=['GET'])
 def get_alunos_com_time():
     alunos = Alunos.query.order_by(Alunos.nome).all()
-    return jsonify([{'id': a.id, 'nome': a.nome, 'time': a.time} for a in alunos])
+    return jsonify([{'id': a.id, 'nome': a.nome, 'username': a.username, 'time': a.time} for a in alunos])
 
 
 
@@ -235,40 +449,53 @@ def migrar_times():
 # --- ROTAS DE GERENCIAMENTO DE ALUNOS ---
 
 @app.route('/gerenciar-alunos')
+@admin_required
 def gerenciar_alunos_page():
     return render_template('gerenciar_alunos.html')
 
 @app.route('/api/alunos', methods=['POST'])
+@admin_required
 def criar_aluno():
     dados = request.get_json()
     nome = dados.get('nome', '').strip()
+    username = dados.get('username', '').strip().lower()
     time = dados.get('time', 'Sem Time')
     
     if not nome:
         return jsonify({'erro': 'Nome é obrigatório'}), 400
     
-    if Alunos.query.filter_by(nome=nome).first():
-        return jsonify({'erro': 'Já existe um aluno com esse nome'}), 409
+    if not username:
+        return jsonify({'erro': 'Username é obrigatório'}), 400
+    
+    if Alunos.query.filter_by(username=username).first():
+        return jsonify({'erro': 'Já existe um aluno com esse username'}), 409
 
-    novo_aluno = Alunos(nome=nome, time=time)
+    novo_aluno = Alunos(nome=nome, username=username, time=time)
+    novo_aluno.set_senha('senha123')  # Senha padrão
+    novo_aluno.primeira_vez = 1  # Força troca de senha no primeiro login
     db.session.add(novo_aluno)
     db.session.commit()
     return jsonify({'status': 'sucesso', 'mensagem': 'Aluno criado!'}), 201
 
 @app.route('/api/alunos/<int:id>', methods=['PUT'])
+@admin_required
 def editar_aluno(id):
     aluno = Alunos.query.get_or_404(id)
     dados = request.get_json()
     
     novo_nome = dados.get('nome', '').strip()
+    novo_username = dados.get('username', '').strip().lower()
     novo_time = dados.get('time')
 
     if novo_nome:
-        # Verifica se o nome já existe em OUTRO aluno
-        existente = Alunos.query.filter_by(nome=novo_nome).first()
-        if existente and existente.id != id:
-            return jsonify({'erro': 'Já existe outro aluno com esse nome'}), 409
         aluno.nome = novo_nome
+    
+    if novo_username:
+        # Verifica se o username já existe em OUTRO aluno
+        existente = Alunos.query.filter_by(username=novo_username).first()
+        if existente and existente.id != id:
+            return jsonify({'erro': 'Já existe outro aluno com esse username'}), 409
+        aluno.username = novo_username
     
     if novo_time:
         aluno.time = novo_time
@@ -277,6 +504,7 @@ def editar_aluno(id):
     return jsonify({'status': 'sucesso', 'mensagem': 'Dados atualizados!'})
 
 @app.route('/api/alunos/<int:id>', methods=['DELETE'])
+@admin_required
 def deletar_aluno(id):
     aluno = Alunos.query.get_or_404(id)
     try:
@@ -300,9 +528,17 @@ def get_alunos():
     return jsonify([{'id': aluno.id, 'nome': aluno.nome} for aluno in alunos])
 
 @app.route('/api/registros', methods=['POST'])
+@login_required
 def add_registro():
     dados = request.get_json()
-    novo_registro = RegistrosQuestoes(aluno_id=dados['aluno_id'], quantidade_questoes=dados['quantidade'], acertos=dados['acertos'])
+    aluno_id = dados.get('aluno_id')
+    
+    # Validar que o aluno só pode registrar para si mesmo (exceto admin)
+    usuario_atual = get_usuario_atual()
+    if usuario_atual.tipo_usuario != 'admin' and aluno_id != usuario_atual.id:
+        return jsonify({'erro': 'Você só pode registrar suas próprias questões'}), 403
+    
+    novo_registro = RegistrosQuestoes(aluno_id=aluno_id, quantidade_questoes=dados['quantidade'], acertos=dados['acertos'])
     db.session.add(novo_registro)
     db.session.commit()
     return jsonify({'status': 'sucesso'}), 201
@@ -314,8 +550,15 @@ def get_registros_recentes():
     return jsonify(lista_registros)
 
 @app.route('/api/registros/<int:registro_id>', methods=['DELETE'])
+@login_required
 def delete_registro(registro_id):
     registro = RegistrosQuestoes.query.get_or_404(registro_id)
+    
+    # Validar que aluno só pode deletar seus próprios registros
+    usuario_atual = get_usuario_atual()
+    if usuario_atual.tipo_usuario != 'admin' and registro.aluno_id != usuario_atual.id:
+        return jsonify({'erro': 'Você só pode apagar seus próprios registros'}), 403
+    
     db.session.delete(registro)
     db.session.commit()
     return jsonify({'status': 'sucesso', 'mensagem': 'Registro apagado.'})
@@ -392,6 +635,7 @@ def get_rankings_semana_passada():
     })
 # --- ROTAS DE GERENCIAMENTO DE SIMULADOS ---
 @app.route('/gerenciar-simulados')
+@admin_required
 def gerenciar_simulados():
     return render_template('gerenciamento_simulados.html')
 
