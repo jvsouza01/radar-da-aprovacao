@@ -257,11 +257,11 @@ def migrar_autenticacao():
         
         db.session.commit()
         
-        return f"Migração concluída! {len(alunos_sem_senha)} alunos atualizados com senha padrão 'senha123'. João Vithor configurado como admin.", 200
+        return f"✅ Migração concluída! {len(alunos_sem_senha)} alunos atualizados com senha padrão 'senha123'. João Vithor configurado como admin.", 200
     
     except Exception as e:
         db.session.rollback()
-        return f"Erro na migração: {e}", 500
+        return f"❌ Erro na migração: {e}", 500
 
 @app.route('/_migrar_adicionar_username')
 def migrar_adicionar_username():
