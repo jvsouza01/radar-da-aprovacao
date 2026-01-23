@@ -258,10 +258,10 @@ def migrar_autenticacao():
         # 3. Definir senha padrão para alunos sem senha
         alunos_sem_senha = Alunos.query.filter(Alunos.senha_hash == None).all()
         for aluno in alunos_sem_senha:
-            aluno.set_senha('senha123')  # Senha padrão
+            aluno.set_senha(DEFAULT_PASSWORD)  # Senha padrão
             if aluno.tipo_usuario is None:
                 # João Vithor é o admin
-                if aluno.nome == 'João Vithor':
+                if aluno.nome == ADMIN_NAME:
                     aluno.tipo_usuario = 'admin'
                     aluno.primeira_vez = 0  # Admin não precisa trocar senha na primeira vez
                 else:
@@ -271,7 +271,7 @@ def migrar_autenticacao():
         
         db.session.commit()
         
-        return f"✅ Migração concluída! {len(alunos_sem_senha)} alunos atualizados com senha padrão 'senha123'. João Vithor configurado como admin.", 200
+        return f"✅ Migração concluída! {len(alunos_sem_senha)} alunos atualizados com senha padrão '{DEFAULT_PASSWORD}'. {ADMIN_NAME} configurado como admin.", 200
     
     except Exception as e:
         db.session.rollback()
@@ -347,14 +347,14 @@ def migrar_completo():
             if senha_hash_atual:
                 continue
             
-            senha_hash = generate_password_hash('senha123')
+            senha_hash = generate_password_hash(DEFAULT_PASSWORD)
             
             # João Vithor é admin
-            if nome == 'João Vithor':
+            if nome == ADMIN_NAME:
                 db.session.execute(text(
                     "UPDATE alunos SET senha_hash = :sh, tipo_usuario = 'admin', primeira_vez = 0 WHERE id = :i"
                 ), {'sh': senha_hash, 'i': aluno_id})
-                mensagens.append(f"👑 João Vithor configurado como ADMIN")
+                mensagens.append(f"👑 {ADMIN_NAME} configurado como ADMIN")
             else:
                 db.session.execute(text(
                     "UPDATE alunos SET senha_hash = :sh, tipo_usuario = 'aluno', primeira_vez = 1 WHERE id = :i"
@@ -420,8 +420,8 @@ def migrar_adicionar_username():
             aluno.username = username_final
             usernames_gerados.append(f"{aluno.nome} → {username_final}")
             
-            # João Vithor é o admin
-            if aluno.nome == 'João Vithor':
+            # Verifica se é o admin
+            if aluno.nome == ADMIN_NAME:
                 aluno.tipo_usuario = 'admin'
                 aluno.primeira_vez = 0  # Admin não precisa trocar senha
         
@@ -439,7 +439,7 @@ def migrar_adicionar_username():
         
         msg = f"✅ Migração concluída! {len(alunos_sem_username)} usernames gerados:\n"
         msg += "\n".join(usernames_gerados)
-        msg += "\n\n⚠️ João Vithor configurado como ADMINISTRADOR."
+        msg += f"\n\n⚠️ {ADMIN_NAME} configurado como ADMINISTRADOR."
         return msg, 200
     
     except Exception as e:
@@ -453,9 +453,7 @@ def index():
     usuario = get_usuario_atual()
     return render_template('index.html', usuario=usuario)
 
-@app.route('/registrar-questoes')
-@login_required
-def registrar_questoes(): return render_template('registrar_questoes.html')
+# NOTA: A rota /registrar-questoes está definida nas linhas 233-238 com mais lógica
 
 @app.route('/historico-questoes')
 @login_required
@@ -589,7 +587,7 @@ def criar_aluno():
         return jsonify({'erro': 'Já existe um aluno com esse username'}), 409
 
     novo_aluno = Alunos(nome=nome, username=username, time=time)
-    novo_aluno.set_senha('senha123')  # Senha padrão
+    novo_aluno.set_senha(DEFAULT_PASSWORD)  # Senha padrão
     novo_aluno.primeira_vez = 1  # Força troca de senha no primeiro login
     db.session.add(novo_aluno)
     db.session.commit()
@@ -650,6 +648,10 @@ def get_alunos():
 def add_registro():
     dados = request.get_json()
     aluno_id = dados.get('aluno_id')
+    
+    # Converter aluno_id para inteiro (pode vir como string do JSON)
+    if aluno_id is not None:
+        aluno_id = int(aluno_id)
     
     # Validar que o aluno só pode registrar para si mesmo (exceto admin)
     usuario_atual = get_usuario_atual()
@@ -747,8 +749,8 @@ def get_rankings_semana_passada():
         'batalha': {'GUI': gui, 'ENZO': enzo, 'vencedor': vencedor},
         # --- NOVO: Envia as datas formatadas ---
         'periodo': {
-            'inicio': start_of_last_week.strftime('%d/%m/%Y'),
-            'fim': end_of_last_week.strftime('%d/%m/%Y')
+            'inicio': start_of_last_week.strftime(DATE_FORMAT),
+            'fim': end_of_last_week.strftime(DATE_FORMAT)
         }
     })
 # --- ROTAS DE GERENCIAMENTO DE SIMULADOS ---
@@ -779,7 +781,7 @@ def get_simulados():
     lista_simulados = []
     for simulado, empresa_nome in simulados:
         nome_display = f"Nº {simulado.numero}" if simulado.numero else simulado.nome_especifico
-        lista_simulados.append({'id': simulado.id, 'nome_display': f"{empresa_nome} - {nome_display} ({simulado.categoria})", 'data': simulado.data_realizacao.strftime('%d/%m/%Y')})
+        lista_simulados.append({'id': simulado.id, 'nome_display': f"{empresa_nome} - {nome_display} ({simulado.categoria})", 'data': simulado.data_realizacao.strftime(DATE_FORMAT)})
     return jsonify(lista_simulados)
 
 @app.route('/api/simulados', methods=['POST'])
